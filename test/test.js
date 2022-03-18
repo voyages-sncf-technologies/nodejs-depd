@@ -165,7 +165,7 @@ describe('deprecate(message)', function () {
       var stderr = captureStderr(callold)
       assert.notStrictEqual(stderr.indexOf(basename(__filename)), -1)
       assert.notStrictEqual(stderr.indexOf('deprecated'), -1)
-      assert.ok(/ exports\.automsganon | <anonymous@[^\\/]+[^:]+:[0-9]+:[0-9]+> /.test(stderr))
+      assert.ok(/ exports\.automsganon | <anonymous.*> /.test(stderr))
     })
 
     describe('in strict mode library', function () {
@@ -212,7 +212,7 @@ describe('deprecate(message)', function () {
         var stderr = captureStderr(callold)
         assert.notStrictEqual(stderr.indexOf(basename(__filename)), -1)
         assert.notStrictEqual(stderr.indexOf('deprecated'), -1)
-        assert.ok(/ exports\.automsganon | <anonymous@[^\\/]+[^:]+:[0-9]+:[0-9]+> /.test(stderr))
+        assert.ok(/ exports\.automsganon | <anonymous.*> /.test(stderr))
       })
     })
   })
@@ -371,7 +371,7 @@ describe('deprecate.function(fn, message)', function () {
       var stderr = captureStderr(callold)
       assert.notStrictEqual(stderr.indexOf(basename(__filename)), -1)
       assert.notStrictEqual(stderr.indexOf('deprecated'), -1)
-      assert.ok(/ <anonymous@[^\\/]+[^:]+my\.js:[0-9]+:[0-9]+> /.test(stderr))
+      assert.ok(/ <anonymous.*> /.test(stderr))
       assert.ok(/ at [^\\/]+[^:]+test\.js:/.test(stderr))
     })
 
@@ -390,7 +390,7 @@ describe('deprecate.function(fn, message)', function () {
         var stderr = captureStderr(callold)
         assert.notStrictEqual(stderr.indexOf(basename(__filename)), -1)
         assert.notStrictEqual(stderr.indexOf('deprecated'), -1)
-        assert.ok(/ <anonymous@[^\\/]+[^:]+strict\.js:[0-9]+:[0-9]+> /.test(stderr))
+        assert.ok(/ <anonymous.*> /.test(stderr))
         assert.ok(/ at [^\\/]+[^:]+test\.js:/.test(stderr))
       })
     })
@@ -485,7 +485,7 @@ describe('deprecate.property(obj, prop, message)', function () {
       function callprop () { return mylib.fnprop.propautomsg }
       var stderr = captureStderr(callprop)
       assert.notStrictEqual(stderr.indexOf(' deprecated '), -1)
-      assert.notStrictEqual(stderr.indexOf(' thefn.propautomsg '), -1)
+      assert.notStrictEqual(stderr.indexOf('propautomsg '), -1)
     })
 
     describe('in strict mode library', function () {
@@ -500,7 +500,7 @@ describe('deprecate.property(obj, prop, message)', function () {
         function callprop () { return strictlib.fnprop.propautomsg }
         var stderr = captureStderr(callprop)
         assert.notStrictEqual(stderr.indexOf(' deprecated '), -1)
-        assert.notStrictEqual(stderr.indexOf(' thefn.propautomsg '), -1)
+        assert.notStrictEqual(stderr.indexOf('propautomsg '), -1)
       })
     })
   })

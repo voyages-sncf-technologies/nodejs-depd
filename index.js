@@ -265,23 +265,19 @@ function log (message, site) {
  */
 
 function callSiteLocation (callSite) {
-  var site
-  if (callSite) {
-    var file = callSite.getFileName() || '<anonymous>'
-    var line = callSite.getLineNumber()
-    var colm = callSite.getColumnNumber()
-    if (callSite.isEval()) {
-      file = callSite.getEvalOrigin() + ', ' + file
-    }
-    site = [file, line, colm]
-    site.callSite = callSite
-    site.name = callSite.getFunctionName()
-  } else {
-    site = ['<unknown file>', '<unknown line>', '<unknown column>']
-    site.callSite = {}
-    site.callSite.getThis = function () { return null }
-    site.name = '<unknown function>'
+  var file = callSite.getFileName() || '<anonymous>'
+  var line = callSite.getLineNumber()
+  var colm = callSite.getColumnNumber()
+
+  if (callSite.isEval()) {
+    file = callSite.getEvalOrigin() + ', ' + file
   }
+
+  var site = [file, line, colm]
+
+  site.callSite = callSite
+  site.name = callSite.getFunctionName()
+
   return site
 }
 
@@ -393,19 +389,66 @@ function getStack () {
   // capture the stack
   Error.captureStackTrace(obj)
 
-  if (typeof obj.stack === 'string' || obj.stack instanceof String) {
+  var stack = obj.stack
+  if (typeof stack === 'string' || stack instanceof String) {
     // Means that prepareObjectStackTrace failed, obj.stack is not a CallSite array.
-    // We fallback to returning an empty array.
-    return []
+    // We fallback to returning an array of custom-made CallSite objects:
+    stack = stack.split('\n').slice(1).map(makeCallSite)
   }
 
   // slice this function off the top
-  var stack = obj.stack.slice(1)
+  stack = stack.slice(1)
 
   Error.prepareStackTrace = prep
   Error.stackTraceLimit = limit
 
   return stack
+}
+
+/**
+ * Build a substitute CallSite object out of a stack trace line.
+ */
+
+function makeCallSite (line) {
+  var at = line.split(' at ').slice(1).join(' at ')
+  var filePath = at
+  var functionName = '<anonymous>'
+  var lineNumber = 1
+  var columnNumber = ''
+  if (filePath.indexOf('(') !== -1) {
+    var parts = filePath.split(' (')
+    if (parts[0] !== 'eval') {
+      functionName = parts[0]
+    }
+    filePath = parts.slice(1).join(' (').slice(0, -1)
+    if (functionName !== '<anonymous>') {
+      var parts2 = rsplit(filePath, ':', 2)
+      filePath = parts2[0]
+      lineNumber = Number(parts2[1])
+      columnNumber = Number(parts2[2])
+      if (functionName.indexOf('Object.') === 0) {
+        functionName = functionName.slice(7)
+      }
+    }
+  }
+  return {
+    getFileName: function () { return filePath },
+    getLineNumber: function () { return lineNumber },
+    getColumnNumber: function () { return columnNumber },
+    isEval: function () { return false },
+    getFunctionName: function () { return functionName },
+    getThis: function () { return null },
+    toString: function () { return at }
+  }
+}
+
+/**
+ * Function to split a string from the right, based on a separator pattern.
+ */
+
+function rsplit (str, sep, maxsplit) {
+  var split = str.split(sep)
+  return [split.slice(0, -maxsplit).join(sep)].concat(split.slice(-maxsplit))
 }
 
 /**
